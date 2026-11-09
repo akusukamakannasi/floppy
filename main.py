@@ -29,9 +29,9 @@ gambar_pipa = pygame.image.load("pipa.png").convert_alpha()
 
 # --- MEMUAT AUDIO (Kebal Error) ---
 try:
-    suara_lompat = pygame.mixer.Sound("lompat.wav")
-    suara_skor = pygame.mixer.Sound("skor.wav")
-    suara_tabrak = pygame.mixer.Sound("tabrak.wav")
+    suara_lompat = pygame.mixer.Sound("lompat.ogg")
+    suara_skor = pygame.mixer.Sound("skor.ogg")
+    suara_tabrak = pygame.mixer.Sound("tabrak.ogg")
     audio_aktif = True
 except:
     audio_aktif = False
