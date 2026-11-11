@@ -2,34 +2,44 @@ import pygame
 import sys
 import random
 import os
-import asyncio  # Library wajib untuk kompatibilitas Web / Pygbag
+import asyncio
 
-# 1. Inisialisasi Pygame & Mixer Audio
+# 1. Inisialisasi Pygame & Sound
 pygame.init()
 pygame.mixer.init()
 
-# Ukuran Layar 16:9 (1280x720) dengan Scaling Otomatis
 SCREEN_WIDTH = 1280
 SCREEN_HEIGHT = 720
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.SCALED)
-pygame.display.set_caption("Floppy Bird")
+pygame.display.set_caption("Floppy Bird 8-Bit")
 
 clock = pygame.time.Clock()
 
-# 2. Memuat Aset Gambar (dengan fallback jika file tidak ditemukan)
+# 2. Sistem Font Pixel Retro
+def get_pixel_font(size):
+    try:
+        return pygame.font.Font("PressStart2P.ttf", size)
+    except Exception:
+        return pygame.font.SysFont("Courier", int(size * 1.1), bold=True)
+
+font_title = get_pixel_font(48)
+font_medium = get_pixel_font(24)
+font_small = get_pixel_font(18)
+
+# 3. Memuat Aset Gambar & Suara
 try:
     bg_img = pygame.image.load("bg.png").convert()
     bg_img = pygame.transform.scale(bg_img, (SCREEN_WIDTH, SCREEN_HEIGHT))
 except Exception:
     bg_img = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT))
-    bg_img.fill((135, 206, 235))
+    bg_img.fill((74, 155, 222))
 
 try:
     bird_img = pygame.image.load("burung.png").convert_alpha()
     bird_img = pygame.transform.scale(bird_img, (60, 45))
 except Exception:
     bird_img = pygame.Surface((60, 45))
-    bird_img.fill((255, 255, 0))
+    bird_img.fill((248, 216, 0))
 
 try:
     pipe_img = pygame.image.load("pipa.png").convert_alpha()
@@ -38,7 +48,6 @@ except Exception:
     pipe_img = pygame.Surface((80, 500))
     pipe_img.fill((0, 200, 0))
 
-# 3. Memuat Aset Suara (.ogg untuk Web)
 try:
     sound_jump = pygame.mixer.Sound("lompat.ogg")
     sound_score = pygame.mixer.Sound("skor.ogg")
@@ -50,7 +59,6 @@ def play_sound(sound):
     if sound:
         sound.play()
 
-# 4. Fungsi Manajemen High Score
 HIGHSCORE_FILE = "highscore.txt"
 
 def load_highscore():
@@ -69,34 +77,38 @@ def save_highscore(score):
     except Exception:
         pass
 
-# Setup Font
-font_large = pygame.font.SysFont("Arial", 60, bold=True)
-font_medium = pygame.font.SysFont("Arial", 40, bold=True)
-font_small = pygame.font.SysFont("Arial", 28)
+# 4. Helper Render Teks & Panel Retro 8-Bit
+def draw_pixel_text(surface, text, font, color, shadow_color, center_x, center_y):
+    shadow_surf = font.render(text, False, shadow_color)
+    shadow_rect = shadow_surf.get_rect(center=(center_x + 4, center_y + 4))
+    surface.blit(shadow_surf, shadow_rect)
 
-# 5. FUNGSI UTAMA ASYNC
+    main_surf = font.render(text, False, color)
+    main_rect = main_surf.get_rect(center=(center_x, center_y))
+    surface.blit(main_surf, main_rect)
+
+def draw_retro_box(surface, rect, fill_color, border_color, outer_border_color):
+    pygame.draw.rect(surface, outer_border_color, rect.inflate(12, 12))
+    pygame.draw.rect(surface, border_color, rect.inflate(6, 6))
+    pygame.draw.rect(surface, fill_color, rect)
+
+# 5. FUNGSI UTAMA GAME
 async def main():
     high_score = load_highscore()
-    
-    # State Game: 'MENU', 'PLAYING', 'GAMEOVER'
     state = 'MENU'
 
-    # Variabel Burung
     bird_x = 200
     bird_y = SCREEN_HEIGHT // 2
     bird_vy = 0
     gravity = 0.6
     jump_strength = -11
 
-    # Variabel Pipa
     pipes = []
     pipe_gap = 210
-    pipe_frequency = 1500  # milidetik
+    pipe_frequency = 1500
     last_pipe_time = pygame.time.get_ticks()
 
     score = 0
-    
-    # Animasi melayang di menu utama
     title_hover = 0
     title_hover_dir = 1
 
@@ -104,7 +116,6 @@ async def main():
     while running:
         current_time = pygame.time.get_ticks()
 
-        # --- A. HANDLER INPUT / EVENT ---
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
@@ -114,7 +125,7 @@ async def main():
                     running = False
                 
                 if event.key == pygame.K_SPACE:
-                    if state == 'MENU' or state == 'GAMEOVER':
+                    if state in ['MENU', 'GAMEOVER']:
                         state = 'PLAYING'
                         bird_y = SCREEN_HEIGHT // 2
                         bird_vy = jump_strength
@@ -126,8 +137,8 @@ async def main():
                         play_sound(sound_jump)
 
             if event.type == pygame.MOUSEBUTTONDOWN:
-                if event.button == 1:  # Klik Kiri / Touch layaknya sentuhan HP
-                    if state == 'MENU' or state == 'GAMEOVER':
+                if event.button == 1:
+                    if state in ['MENU', 'GAMEOVER']:
                         state = 'PLAYING'
                         bird_y = SCREEN_HEIGHT // 2
                         bird_vy = jump_strength
@@ -138,17 +149,15 @@ async def main():
                         bird_vy = jump_strength
                         play_sound(sound_jump)
 
-        # --- B. LOGIKA PERMAINAN ---
         if state == 'MENU':
-            title_hover += 0.5 * title_hover_dir
-            if abs(title_hover) > 15:
+            title_hover += 0.4 * title_hover_dir
+            if abs(title_hover) > 12:
                 title_hover_dir *= -1
 
         elif state == 'PLAYING':
             bird_vy += gravity
             bird_y += bird_vy
 
-            # Kemunculan Pipa Baru
             if current_time - last_pipe_time > pipe_frequency:
                 top_height = random.randint(100, SCREEN_HEIGHT - pipe_gap - 100)
                 pipes.append({
@@ -159,10 +168,8 @@ async def main():
                 })
                 last_pipe_time = current_time
 
-            # Pergerakan Pipa & Cek Skor
             for p in pipes:
                 p['x'] -= 5
-
                 if not p['passed'] and p['x'] + 80 < bird_x:
                     p['passed'] = True
                     score += 1
@@ -173,13 +180,11 @@ async def main():
 
             pipes = [p for p in pipes if p['x'] > -100]
 
-            # Deteksi Tabrakan (Atap/Lantai)
             bird_rect = pygame.Rect(bird_x, bird_y, 50, 35)
             if bird_y <= 0 or bird_y + 45 >= SCREEN_HEIGHT:
                 play_sound(sound_hit)
                 state = 'GAMEOVER'
 
-            # Deteksi Tabrakan dengan Pipa
             for p in pipes:
                 top_pipe_rect = pygame.Rect(p['x'], 0, 80, p['top_height'])
                 bottom_pipe_rect = pygame.Rect(p['x'], p['bottom_y'], 80, SCREEN_HEIGHT - p['bottom_y'])
@@ -188,28 +193,24 @@ async def main():
                     play_sound(sound_hit)
                     state = 'GAMEOVER'
 
-        # --- C. PROSES RENDER GAMBAR ---
         screen.blit(bg_img, (0, 0))
 
         if state == 'MENU':
-            title_surf = font_large.render("FLOPPY BIRD", True, (255, 255, 255))
-            screen.blit(title_surf, (SCREEN_WIDTH // 2 - title_surf.get_width() // 2, 180))
+            draw_pixel_text(screen, "FLOPPY BIRD", font_title, (248, 216, 0), (0, 0, 0), SCREEN_WIDTH // 2, 170)
 
-            bird_menu_y = 270 + title_hover
+            bird_menu_y = 260 + title_hover
             screen.blit(bird_img, (SCREEN_WIDTH // 2 - 30, bird_menu_y))
 
-            start_bg = pygame.Rect(SCREEN_WIDTH // 2 - 140, 400, 280, 70)
-            pygame.draw.rect(screen, (230, 126, 34), start_bg, border_radius=15)
-            pygame.draw.rect(screen, (255, 255, 255), start_bg, 4, border_radius=15)
+            btn_rect = pygame.Rect(SCREEN_WIDTH // 2 - 160, 370, 320, 64)
+            draw_retro_box(screen, btn_rect, (230, 81, 0), (255, 183, 77), (0, 0, 0))
+            draw_pixel_text(screen, "START GAME", font_medium, (255, 255, 255), (0, 0, 0), btn_rect.centerx, btn_rect.centery)
 
-            start_text = font_medium.render("START GAME", True, (255, 255, 255))
-            screen.blit(start_text, (start_bg.centerx - start_text.get_width() // 2, start_bg.centery - start_text.get_height() // 2))
+            if (current_time // 500) % 2 == 0:
+                draw_pixel_text(screen, "TEKAN SPASI / SENTUH LAYAR", font_small, (255, 255, 255), (0, 0, 0), SCREEN_WIDTH // 2, 485)
 
-            prompt_text = font_small.render("Tekan SPASI atau Sentuh Layar untuk Mulai", True, (240, 240, 240))
-            screen.blit(prompt_text, (SCREEN_WIDTH // 2 - prompt_text.get_width() // 2, 500))
-
-            hs_text = font_small.render(f"High Score: {high_score}", True, (255, 215, 0))
-            screen.blit(hs_text, (SCREEN_WIDTH // 2 - hs_text.get_width() // 2, 560))
+            hs_box = pygame.Rect(SCREEN_WIDTH // 2 - 160, 540, 320, 48)
+            draw_retro_box(screen, hs_box, (33, 33, 33), (117, 117, 117), (0, 0, 0))
+            draw_pixel_text(screen, f"HIGH SCORE: {high_score}", font_small, (248, 216, 0), (0, 0, 0), hs_box.centerx, hs_box.centery)
 
         elif state in ['PLAYING', 'GAMEOVER']:
             for p in pipes:
@@ -225,34 +226,28 @@ async def main():
             rotated_bird = pygame.transform.rotate(bird_img, angle)
             screen.blit(rotated_bird, (bird_x, bird_y))
 
-            score_surf = font_large.render(str(score), True, (255, 255, 255))
-            screen.blit(score_surf, (SCREEN_WIDTH // 2 - score_surf.get_width() // 2, 50))
+            draw_pixel_text(screen, str(score), font_title, (255, 255, 255), (0, 0, 0), SCREEN_WIDTH // 2, 70)
 
             if state == 'GAMEOVER':
                 overlay = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.SRCALPHA)
-                overlay.fill((0, 0, 0, 140))
+                overlay.fill((0, 0, 0, 160))
                 screen.blit(overlay, (0, 0))
 
-                go_surf = font_large.render("GAME OVER", True, (231, 76, 60))
-                screen.blit(go_surf, (SCREEN_WIDTH // 2 - go_surf.get_width() // 2, 220))
+                go_box = pygame.Rect(SCREEN_WIDTH // 2 - 220, 160, 440, 320)
+                draw_retro_box(screen, go_box, (33, 33, 33), (224, 224, 224), (0, 0, 0))
 
-                score_info = font_medium.render(f"Skor: {score}   |   Tertinggi: {high_score}", True, (255, 255, 255))
-                screen.blit(score_info, (SCREEN_WIDTH // 2 - score_info.get_width() // 2, 320))
+                draw_pixel_text(screen, "GAME OVER", font_title, (229, 57, 53), (0, 0, 0), SCREEN_WIDTH // 2, 230)
+                draw_pixel_text(screen, f"SKOR    : {score}", font_medium, (255, 255, 255), (0, 0, 0), SCREEN_WIDTH // 2, 300)
+                draw_pixel_text(screen, f"TERTINGGI: {high_score}", font_medium, (248, 216, 0), (0, 0, 0), SCREEN_WIDTH // 2, 345)
 
-                restart_btn = pygame.Rect(SCREEN_WIDTH // 2 - 150, 420, 300, 65)
-                pygame.draw.rect(screen, (46, 204, 113), restart_btn, border_radius=15)
-                pygame.draw.rect(screen, (255, 255, 255), restart_btn, 4, border_radius=15)
-
-                restart_text = font_medium.render("MAIN LAGI", True, (255, 255, 255))
-                screen.blit(restart_text, (restart_btn.centerx - restart_text.get_width() // 2, restart_btn.centery - restart_text.get_height() // 2))
+                restart_btn = pygame.Rect(SCREEN_WIDTH // 2 - 150, 400, 300, 56)
+                draw_retro_box(screen, restart_btn, (67, 160, 71), (129, 199, 132), (0, 0, 0))
+                draw_pixel_text(screen, "MAIN LAGI", font_medium, (255, 255, 255), (0, 0, 0), restart_btn.centerx, restart_btn.centery)
 
         pygame.display.update()
         clock.tick(60)
-
-        # Baris paling penting agar browser tidak freeze/unresponsive:
         await asyncio.sleep(0)
 
     pygame.quit()
 
-# Eksekusi Async Loop
 asyncio.run(main())
