@@ -112,6 +112,10 @@ async def main():
     title_hover = 0
     title_hover_dir = 1
 
+    # Area tombol presisi
+    start_btn_rect = pygame.Rect(SCREEN_WIDTH // 2 - 160, 370, 320, 64)
+    restart_btn_rect = pygame.Rect(SCREEN_WIDTH // 2 - 150, 400, 300, 56)
+
     running = True
     while running:
         current_time = pygame.time.get_ticks()
@@ -125,26 +129,39 @@ async def main():
                     running = False
                 
                 if event.key == pygame.K_SPACE:
-                    if state in ['MENU', 'GAMEOVER']:
+                    if state == 'MENU':
                         state = 'PLAYING'
                         bird_y = SCREEN_HEIGHT // 2
                         bird_vy = jump_strength
                         pipes.clear()
                         score = 0
                         play_sound(sound_jump)
+                    elif state == 'GAMEOVER':
+                        state = 'MENU'
                     elif state == 'PLAYING':
                         bird_vy = jump_strength
                         play_sound(sound_jump)
 
+            # Kontrol Sentuh / Klik Tombol Presisi
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 1:
-                    if state in ['MENU', 'GAMEOVER']:
-                        state = 'PLAYING'
-                        bird_y = SCREEN_HEIGHT // 2
-                        bird_vy = jump_strength
-                        pipes.clear()
-                        score = 0
-                        play_sound(sound_jump)
+                    click_pos = event.pos
+
+                    if state == 'MENU':
+                        # Hanya mulai jika menekan tombol START GAME
+                        if start_btn_rect.collidepoint(click_pos):
+                            state = 'PLAYING'
+                            bird_y = SCREEN_HEIGHT // 2
+                            bird_vy = jump_strength
+                            pipes.clear()
+                            score = 0
+                            play_sound(sound_jump)
+
+                    elif state == 'GAMEOVER':
+                        # Hanya kembali ke MENU jika menekan tombol MAIN LAGI
+                        if restart_btn_rect.collidepoint(click_pos):
+                            state = 'MENU'
+
                     elif state == 'PLAYING':
                         bird_vy = jump_strength
                         play_sound(sound_jump)
@@ -201,14 +218,10 @@ async def main():
             bird_menu_y = 260 + title_hover
             screen.blit(bird_img, (SCREEN_WIDTH // 2 - 30, bird_menu_y))
 
-            btn_rect = pygame.Rect(SCREEN_WIDTH // 2 - 160, 370, 320, 64)
-            draw_retro_box(screen, btn_rect, (230, 81, 0), (255, 183, 77), (0, 0, 0))
-            draw_pixel_text(screen, "START GAME", font_medium, (255, 255, 255), (0, 0, 0), btn_rect.centerx, btn_rect.centery)
+            draw_retro_box(screen, start_btn_rect, (230, 81, 0), (255, 183, 77), (0, 0, 0))
+            draw_pixel_text(screen, "START GAME", font_medium, (255, 255, 255), (0, 0, 0), start_btn_rect.centerx, start_btn_rect.centery)
 
-            if (current_time // 500) % 2 == 0:
-                draw_pixel_text(screen, "TEKAN SPASI / SENTUH LAYAR", font_small, (255, 255, 255), (0, 0, 0), SCREEN_WIDTH // 2, 485)
-
-            hs_box = pygame.Rect(SCREEN_WIDTH // 2 - 160, 540, 320, 48)
+            hs_box = pygame.Rect(SCREEN_WIDTH // 2 - 160, 480, 320, 48)
             draw_retro_box(screen, hs_box, (33, 33, 33), (117, 117, 117), (0, 0, 0))
             draw_pixel_text(screen, f"HIGH SCORE: {high_score}", font_small, (248, 216, 0), (0, 0, 0), hs_box.centerx, hs_box.centery)
 
@@ -240,9 +253,8 @@ async def main():
                 draw_pixel_text(screen, f"SKOR    : {score}", font_medium, (255, 255, 255), (0, 0, 0), SCREEN_WIDTH // 2, 300)
                 draw_pixel_text(screen, f"TERTINGGI: {high_score}", font_medium, (248, 216, 0), (0, 0, 0), SCREEN_WIDTH // 2, 345)
 
-                restart_btn = pygame.Rect(SCREEN_WIDTH // 2 - 150, 400, 300, 56)
-                draw_retro_box(screen, restart_btn, (67, 160, 71), (129, 199, 132), (0, 0, 0))
-                draw_pixel_text(screen, "MAIN LAGI", font_medium, (255, 255, 255), (0, 0, 0), restart_btn.centerx, restart_btn.centery)
+                draw_retro_box(screen, restart_btn_rect, (67, 160, 71), (129, 199, 132), (0, 0, 0))
+                draw_pixel_text(screen, "MAIN LAGI", font_medium, (255, 255, 255), (0, 0, 0), restart_btn_rect.centerx, restart_btn_rect.centery)
 
         pygame.display.update()
         clock.tick(60)
