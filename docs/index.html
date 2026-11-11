@@ -182,45 +182,6 @@ function show_infobox() {
             right: 0;
         }
 
-        /* Layar Peringatan Rotasi Layar HP */
-        #rotate-warning {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            background-color: #111111;
-            color: #ffffff;
-            z-index: 9999999;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-            font-family: sans-serif;
-            padding: 20px;
-            box-sizing: border-box;
-        }
-
-        #rotate-warning .icon {
-            font-size: 60px;
-            margin-bottom: 15px;
-            animation: rotate-anim 2s infinite ease-in-out;
-        }
-
-        @keyframes rotate-anim {
-            0% { transform: rotate(0deg); }
-            50% { transform: rotate(-90deg); }
-            100% { transform: rotate(0deg); }
-        }
-
-        /* Hanya Tampilkan Peringatan jika Layar HP dalam Posisi Tegak (Portrait) */
-        @media screen and (max-width: 900px) and (orientation: portrait) {
-            #rotate-warning {
-                display: flex !important;
-            }
-        }
-
         div.emscripten { text-align: center; }
         div.emscripten_border { border: 1px solid black; }
         div.thick_border { border: 4px solid black; }
@@ -237,13 +198,6 @@ function show_infobox() {
 </head>
 
 <body>
-
-    <!-- Layar Peringatan Rotasi Layar HP -->
-    <div id="rotate-warning">
-        <div class="icon">📱🔄</div>
-        <h2 style="margin: 0 0 10px 0;">Putar HP Kamu</h2>
-        <p style="margin: 0; color: #aaaaaa;">Game Floppy Bird dimainkan dalam posisi Landscape (Miring).</p>
-    </div>
 
     <div id="transfer" align=center>
         <div class="emscripten" id="status">Downloading...</div>
@@ -333,13 +287,13 @@ function show_infobox() {
         let elem = document.documentElement;
         if (!document.fullscreenElement) {
             if (elem.requestFullscreen) {
-                elem.requestFullscreen().catch(err => {});
+                elem.requestFullscreen().catch(function(err) {});
             } else if (elem.webkitRequestFullscreen) {
                 elem.webkitRequestFullscreen();
             }
         }
         if (screen.orientation && screen.orientation.lock) {
-            screen.orientation.lock("landscape").catch(err => {});
+            screen.orientation.lock("landscape").catch(function(err) {});
         }
     }
 
