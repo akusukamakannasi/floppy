@@ -7,7 +7,7 @@ Loading tesgame from tesgame.apk
     Python  : 3.12
     CDN URL : https://pygame-web.github.io/cdn/0.9.3/
     Screen  : 1280x720
-    Title   : tesgame
+    Title   : Floppy Bird
     Folder  : tesgame
     Authors : pgw
     SPDX-License-Identifier: cookiecutter.spdx
@@ -23,20 +23,16 @@ from pathlib import Path
 # do not rename
 async def custom_site():
     import embed
-    platform.document.body.style.background = "#7f7f7f"
+    platform.document.body.style.background = "#0B0F19"
 
     platform.window.transfer.hidden = true
     platform.window.canvas.style.visibility = "visible"
 
-
     bundle = "tesgame"
 
-    # the C or js loader could do that but be explicit.
-    appdir = Path(f"/data/data/{bundle}") # /data/data/tesgame
+    appdir = Path(f"/data/data/{bundle}")
     appdir.mkdir()
 
-
-    # unpack filesystem from compressed archive into work dir
     if platform.window.location.host.find('.itch.zone')>0:
         import zipfile
         async with platform.fopen("tesgame.apk", "rb") as archive:
@@ -49,27 +45,15 @@ async def custom_site():
             tar.extractall(path=appdir.as_posix(), filter='tar')
             tar.close()
 
-    # preloader will change to work dir and prepend it to sys.path
     platform.run_main(PyConfig, loaderhome= appdir / "assets", loadermain=None)
 
-
-    # wait preloading complete : that includes images and wasm compilation of bundled modules
     while embed.counter()<0:
         await asyncio.sleep(.1)
 
     main = appdir / "assets" / "main.py"
 
-    # TODO: test for window.webkitAudioContext and block aio loop until gesture if accessing media manager play
-    # before a gesture is recorded ( touch or click )
-
-    # test/wait user media interaction
     if not platform.window.MM.UME:
-
-        # now that apk is mounted we have access to font cache
-        # but we need to fill __file__ that is not yet set
         __import__(__name__).__file__ = main
-
-        # now make a prompt
         msg  = "Ready to start ! Please click/touch page"
         platform.window.infobox.innerText = msg
         print("\n"*4, f"    * Waiting for media user engagement. {msg} *" , "\n"*4)
@@ -77,21 +61,14 @@ async def custom_site():
         while not platform.window.MM.UME:
             await asyncio.sleep(.1)
 
-    # start async top level machinery if not started and add a console in any case if requested.
     await TopLevel_async_handler.start_toplevel(platform.shell, console=window.python.config.debug)
 
-    # now that apk is mounted we have access to font cache
-    # but we need to fill __file__/__name__ that are not yet set
     __import__(__name__).__file__ = main
-
 
     def ui_callback(pkg):
         platform.window.infobox.innerText = f"installing {pkg}"
 
     await shell.source(main, callback=ui_callback)
-
-    # if you don't reach that step
-    # your main.py has an infinite sync loop somewhere !
 
     platform.window.infobox.style.display = "none"
     platform.window.config.gui_divider = 1
@@ -102,47 +79,11 @@ async def custom_site():
 
 asyncio.run( custom_site() )
 
-
-
-
-
-
-
-
-
-
-
-
 # BEGIN BLOCK
-#
-# now this is the html part you can (and should) customize
-# It is not mandatory : pygame-script when it reads the first line (also called
-# shebang ) of above code create absolute minimal widget set
-# required for running with default rules
-#
-# do not alter that comment block it is separating python code from html code
 # =============================================================================
-# --></script><head><!--
-//=============================================================================
-//
-//
-//
-//
-//
-//
-//
+# --></script><head>
 
-    {%- if cookiecutter.comment != "" -%}
-{{cookiecutter.comment}}
-    {% endif %}
-
---><script type="application/javascript">
-// END BLOCK
-
-
-
-// this dict is available under PyConfig.config from __main__
-
+<script type="application/javascript">
 config = {
     xtermjs : "1" ,
     _sdl2 : "canvas",
@@ -162,34 +103,30 @@ config = {
 }
 
 function show_infobox() {
-    infobox.style.display = "block";
-
-    // Measure box
-    const w = infobox.offsetWidth;
-    const h = infobox.offsetHeight;
-
-    // Center in viewport
-    const left = (window.innerWidth - w) / 2;
-    const top = (window.innerHeight - h) / 2;
-
-    infobox.style.left = left + "px";
-    infobox.style.top = top + "px";
+    infobox.style.display = "flex";
 }
-
 </script>
 
-    <title>tesgame</title>
+    <title>Floppy Bird</title>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="viewport" content="height=device-height, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes"/>
-
 
     <link rel="icon" type="image/png" href="favicon.png" sizes="16x16">
 
     <style>
+        html, body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #0B0F19;
+        }
+
         #status {
             display: inline-block;
             vertical-align: top;
@@ -204,31 +141,48 @@ function show_infobox() {
             width: 300px;
         }
 
+        /* Splash Screen Elegan */
         #infobox {
-            position: fixed; /* center relative to viewport */
-            background: green;
-            color: blue;
-            font-weight: bold;
-            padding: 12px 24px;
- /*           display: none; */
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: radial-gradient(circle at center, #1E293B 0%, #0B0F19 100%);
+            color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
             z-index: 999999;
+            cursor: pointer;
+            text-align: center;
+            box-sizing: border-box;
+            padding: 20px;
+            user-select: none;
+            -webkit-user-select: none;
         }
-        div.emscripten { text-align: center; }
-        div.emscripten_border { border: 1px solid black; }
-        div.thick_border { border: 4px solid black; }
 
-        /* the canvas *must not* have any border or padding, or mouse coords will be wrong */
-        /* average size of droid screen 470dp x 320dp  */
+        @keyframes floatAnim {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+
+        @keyframes breathe {
+            0%, 100% { opacity: 0.35; transform: scale(0.98); }
+            50% { opacity: 0.9; transform: scale(1.02); }
+        }
+
+        /* Canvas Fullscreen Responsif */
         canvas.emscripten {
             border: 0px none;
             background-color: transparent;
-            width: 100%;
-            height: 100%;
+            width: 100vw !important;
+            height: 100vh !important;
+            object-fit: contain !important;
             z-index: 5;
-
             padding: 0;
             margin: 0 auto;
-
             position: absolute;
             top: 0;
             bottom: 0;
@@ -236,53 +190,16 @@ function show_infobox() {
             right: 0;
         }
 
-        body {
-            font-family: arial;
-            margin: 0;
-            padding: none;
-            background-color:powderblue;
-        }
-
-        .topright{
-           position:absolute;
-           top:0px;
-           right:0px;
-        }
+        div.emscripten { text-align: center; }
+        div.emscripten_border { border: 1px solid black; }
+        div.thick_border { border: 4px solid black; }
 
         .bottomright {
-            position:absolute;
+            position: absolute;
             top: 40%;
             right: 0px;
         }
-
-        .center {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .trinfo{
-           position: relative;
-           right: 0px;
-           border: 1px solid black;
-        }
-
-        .framed{
-           position: relative;
-           top: 150px;
-           right: 10px;
-           border: 1px solid black;
-        }
     </style>
-
-    <script>
-/*
-        if (navigator.serviceWorker)
-            navigator.serviceWorker.register("https://pygame-web.github.io/cdn/0.9.3/pygbag0.9.3.js")
-        else
-            console.warn("Service workers not supported")
-*/
-    </script>
 
     <script src="https://pygame-web.github.io/cdn/0.9.3//browserfs.min.js"></script>
 
@@ -291,33 +208,42 @@ function show_infobox() {
 <body>
 
     <div id="transfer" align=center>
-<!--        <div class="spinner" id='spinner'></div> -->
         <div class="emscripten" id="status">Downloading...</div>
         <div class="emscripten">
             <progress value="0" max="100" id="progress"></progress>
         </div>
     </div>
 
+    <canvas class="emscripten" id="canvas" width="1px" height="1px" oncontextmenu="event.preventDefault()" tabindex=1></canvas>
+    <canvas class="emscripten" id="canvas3d" width="1280px" height="720px" oncontextmenu="event.preventDefault()" tabindex=1 hidden></canvas>
 
-
-    <canvas class="emscripten" id="canvas"
-width="1px"
-height="1px"
-    oncontextmenu="event.preventDefault()" tabindex=1>
-    </canvas>
-
-    <canvas class="emscripten" id="canvas3d"
-width="1280px"
-height="720px"
-    oncontextmenu="event.preventDefault()" tabindex=1 hidden>
-    </canvas>
-
-    <div id="infobox">Loading, please wait ...</div>
+    <div id="infobox">
+        <div style="display: flex; flex-direction: column; align-items: center;">
+            <svg width="72" height="72" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" style="animation: floatAnim 2.6s ease-in-out infinite; filter: drop-shadow(0 8px 20px rgba(245, 158, 11, 0.35)); margin-bottom: 12px;">
+                <path d="M 20,50 Q 35,25 65,30 Q 80,32 90,45 Q 75,55 60,52 Q 40,72 25,65 Q 15,60 20,50 Z" fill="url(#birdGrad)"/>
+                <circle cx="70" cy="40" r="4.5" fill="#0B0F19"/>
+                <defs>
+                    <linearGradient id="birdGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#FCD34D" />
+                        <stop offset="100%" stop-color="#F59E0B" />
+                    </linearGradient>
+                </defs>
+            </svg>
+            <div style="font-size: 32px; font-weight: 900; letter-spacing: 6px; background: linear-gradient(180deg, #FFFFFF 0%, #94A3B8 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-shadow: 0 4px 20px rgba(0,0,0,0.5);">FLOPPY BIRD</div>
+            
+            <div style="margin-top: 45px; display: flex; flex-direction: column; align-items: center; gap: 10px; animation: breathe 2.2s ease-in-out infinite;">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#64748B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="9"></circle>
+                    <path d="M12 8v8M8 12h8"></path>
+                </svg>
+                <span style="font-size: 12px; font-weight: 600; letter-spacing: 4px; color: #94A3B8; text-transform: uppercase;">Sentuh Di Mana Saja Untuk Memulai</span>
+            </div>
+        </div>
+    </div>
 
     <div id=html></div>
 
-    <div id=crt  class=bottomright >
-
+    <div id=crt class=bottomright>
         <div id="system" hidden>
             <div class="button-container">
                 <button id="aiostop" disabled>AIO ⏏︎</button>
@@ -330,37 +256,18 @@ height="720px"
                 <div id=load_min>min</div>
                 <div id=load_avg>avg</div>
                 <div id=load_max>max</div>
-              <button id="load_rst" disabled>RESET</button>
+                <button id="load_rst" disabled>RESET</button>
             </div>
 
             <div id="level">(battery level unknown)</div>
             <div id="stateBattery">(charging state unknown)</div>
-
         </div>
 
         <div id=box class="emscripten_border" hidden=true>
-
             <div id="info" class="trinfo"></div>
-
-            <iframe id="iframe" class="framed" name="iframe"
-width="470px" height="90%"
-allowtransparency="true"
-style="z-index: 10;"
-style="background: #FFFFFF;"
-frameborder="1"
-                allowfullscreen="true"
-                webkitallowfullscreen="true"
-                msallowfullscreen="true"
-                mozallowfullscreen="true"
-                sandbox="allow-same-origin allow-top-navigation allow-scripts allow-pointer-lock"
-                allow="autoplay; fullscreen *; geolocation; microphone; camera; midi; monetization; xr-spatial-tracking; gamepad; gyroscope; accelerometer; xr; cross-origin-isolated"
-                src="https://pygame-web.github.io/cdn/0.9.3/empty.html"
-                scrolling="yes">
-            </iframe>
+            <iframe id="iframe" class="framed" name="iframe" width="470px" height="90%" allowtransparency="true" style="z-index: 10; background: #FFFFFF;" frameborder="1" allowfullscreen="true" src="https://pygame-web.github.io/cdn/0.9.3/empty.html" scrolling="yes"></iframe>
         </div>
-
     </div>
-
 
     <div id="dlg" hidden>
         <input type="file" id="dlg_multifile" multiple accept="image/*">
@@ -372,16 +279,11 @@ frameborder="1"
     </div>
 
     <script type="application/javascript">
-
     globalThis.__canvas_resized = (self, ecw, ech) => {
         console.warn("TODO: panda3d canvas monitor", self, ecw, ech)
     }
 
     async function custom_onload(debug_hidden) {
-        // this is called before anything python is loaded
-        // make your js customization here
-        console.log(__FILE__, "custom_onload")
-
         pyconsole.hidden = debug_hidden
         system.hidden = debug_hidden
         transfer.hidden = debug_hidden
@@ -392,20 +294,14 @@ frameborder="1"
     }
 
     function custom_prerun(){
-        // no python main and no (MEMFS + VFS) yet.
         console.log(__FILE__, "custom_prerun")
-
     }
 
     function custom_postrun(){
-        // python main and no VFS filesystem yet.
         console.log(__FILE__, "custom_postrun")
-
     }
 
     function debug() {
-        // allow to gain access to dev tools from js console
-        // but only on desktop. difficult to reach when in iframe
         python.config.debug = true
         custom_onload(false)
         Module.PyRun_SimpleString("shell.uptime()")
@@ -416,22 +312,56 @@ frameborder="1"
         document.getElementById("info").innerHTML = data
     }
 
-    function info_online(url) {
-        // display info about current APK
-        fetch( url /*, options */)
-            .then((response) => response.text())
-            .then((html) => {
-                info_inline(html);
-        })
-        .catch((error) => {
-            console.warn(error);
-        });
+    const infobox = document.getElementById("infobox");
+    const renderOverlay = () => {
+        infobox.innerHTML = `
+            <div style="display: flex; flex-direction: column; align-items: center;">
+                <svg width="72" height="72" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" style="animation: floatAnim 2.6s ease-in-out infinite; filter: drop-shadow(0 8px 20px rgba(245, 158, 11, 0.35)); margin-bottom: 12px;">
+                    <path d="M 20,50 Q 35,25 65,30 Q 80,32 90,45 Q 75,55 60,52 Q 40,72 25,65 Q 15,60 20,50 Z" fill="url(#birdGrad)"/>
+                    <circle cx="70" cy="40" r="4.5" fill="#0B0F19"/>
+                    <defs>
+                        <linearGradient id="birdGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#FCD34D" />
+                            <stop offset="100%" stop-color="#F59E0B" />
+                        </linearGradient>
+                    </defs>
+                </svg>
+                <div style="font-size: 32px; font-weight: 900; letter-spacing: 6px; background: linear-gradient(180deg, #FFFFFF 0%, #94A3B8 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-shadow: 0 4px 20px rgba(0,0,0,0.5);">FLOPPY BIRD</div>
+                
+                <div style="margin-top: 45px; display: flex; flex-direction: column; align-items: center; gap: 10px; animation: breathe 2.2s ease-in-out infinite;">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#64748B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="9"></circle>
+                        <path d="M12 8v8M8 12h8"></path>
+                    </svg>
+                    <span style="font-size: 12px; font-weight: 600; letter-spacing: 4px; color: #94A3B8; text-transform: uppercase;">Sentuh Di Mana Saja Untuk Memulai</span>
+                </div>
+            </div>
+        `;
+    };
+
+    const observer = new MutationObserver(() => {
+        if (infobox.innerText.includes("Ready to start")) {
+            renderOverlay();
+        }
+    });
+    observer.observe(infobox, { childList: true, characterData: true, subtree: true });
+
+    function requestGameFullscreen() {
+        let elem = document.documentElement;
+        if (!document.fullscreenElement) {
+            if (elem.requestFullscreen) {
+                elem.requestFullscreen().catch(function(err) {});
+            } else if (elem.webkitRequestFullscreen) {
+                elem.webkitRequestFullscreen();
+            }
+        }
+        if (screen.orientation && screen.orientation.lock) {
+            screen.orientation.lock("landscape").catch(function(err) {});
+        }
     }
 
-    function frame_online(url) {
-        window.frames["iframe"].location = url;
-    }
-
+    window.addEventListener("click", requestGameFullscreen);
+    window.addEventListener("touchstart", requestGameFullscreen);
     </script>
 
 </body>
