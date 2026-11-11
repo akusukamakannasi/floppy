@@ -92,11 +92,39 @@ def draw_retro_box(surface, rect, fill_color, border_color, outer_border_color):
     pygame.draw.rect(surface, border_color, rect.inflate(6, 6))
     pygame.draw.rect(surface, fill_color, rect)
 
-# Helper untuk Memastikan Deteksi Klik/Sentuh Akurat di Laptop & HP
-def is_button_clicked(rect, event_pos):
-    mouse_pos = pygame.mouse.get_pos()
-    padded_rect = rect.inflate(10, 10)
-    return padded_rect.collidepoint(mouse_pos) or padded_rect.collidepoint(event_pos)
+# Conversion Koordinat Mouse Laptop (Menyesuaikan Skala Browser Pygbag)
+def get_scaled_mouse_pos():
+    mx, my = pygame.mouse.get_pos()
+    try:
+        win_w, win_h = pygame.display.get_window_size()
+        if win_w > 0 and win_h > 0:
+            scale_x = SCREEN_WIDTH / win_w
+            scale_y = SCREEN_HEIGHT / win_h
+            return (mx * scale_x, my * scale_y)
+    except Exception:
+        pass
+    return (mx, my)
+
+def is_button_clicked(rect, event_pos=None):
+    smx, smy = get_scaled_mouse_pos()
+    padded_rect = rect.inflate(16, 16)
+    
+    if padded_rect.collidepoint(smx, smy):
+        return True
+
+    if event_pos:
+        ex, ey = event_pos
+        try:
+            win_w, win_h = pygame.display.get_window_size()
+            if win_w > 0 and win_h > 0:
+                ex *= (SCREEN_WIDTH / win_w)
+                ey *= (SCREEN_HEIGHT / win_h)
+        except Exception:
+            pass
+        if padded_rect.collidepoint(ex, ey):
+            return True
+
+    return False
 
 # 5. FUNGSI UTAMA GAME
 async def main():
@@ -118,20 +146,20 @@ async def main():
     title_hover = 0
     title_hover_dir = 1
 
-    # Area Tombol Presisi
+    # Definisi Area Tombol
     start_btn_rect = pygame.Rect(SCREEN_WIDTH // 2 - 160, 370, 320, 64)
     restart_btn_rect = pygame.Rect(SCREEN_WIDTH // 2 - 150, 400, 300, 56)
 
     running = True
     while running:
         current_time = pygame.time.get_ticks()
-        mouse_pos = pygame.mouse.get_pos()
+        smx, smy = get_scaled_mouse_pos()
 
-        # Ubah Bentuk Kursor Mouse di Laptop saat Hover ke Tombol
+        # Deteksi Hover untuk Ubah Bentuk Kursor di Laptop
         is_hovering = False
-        if state == 'MENU' and start_btn_rect.collidepoint(mouse_pos):
+        if state == 'MENU' and start_btn_rect.collidepoint(smx, smy):
             is_hovering = True
-        elif state == 'GAMEOVER' and restart_btn_rect.collidepoint(mouse_pos):
+        elif state == 'GAMEOVER' and restart_btn_rect.collidepoint(smx, smy):
             is_hovering = True
 
         try:
@@ -167,7 +195,7 @@ async def main():
             # Deteksi Klik Kursor Laptop & Sentuhan HP
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 1:
-                    click_pos = getattr(event, 'pos', mouse_pos)
+                    click_pos = getattr(event, 'pos', None)
 
                     if state == 'MENU':
                         if is_button_clicked(start_btn_rect, click_pos):
@@ -238,8 +266,8 @@ async def main():
             bird_menu_y = 260 + title_hover
             screen.blit(bird_img, (SCREEN_WIDTH // 2 - 30, bird_menu_y))
 
-            # Efek Warna Hover di Laptop
-            if start_btn_rect.collidepoint(mouse_pos):
+            # Efek Hover Tombol
+            if start_btn_rect.collidepoint(smx, smy):
                 draw_retro_box(screen, start_btn_rect, (255, 112, 67), (255, 224, 130), (0, 0, 0))
             else:
                 draw_retro_box(screen, start_btn_rect, (230, 81, 0), (255, 183, 77), (0, 0, 0))
@@ -278,8 +306,7 @@ async def main():
                 draw_pixel_text(screen, f"SKOR    : {score}", font_medium, (255, 255, 255), (0, 0, 0), SCREEN_WIDTH // 2, 300)
                 draw_pixel_text(screen, f"TERTINGGI: {high_score}", font_medium, (248, 216, 0), (0, 0, 0), SCREEN_WIDTH // 2, 345)
 
-                # Efek Warna Hover di Laptop saat Game Over
-                if restart_btn_rect.collidepoint(mouse_pos):
+                if restart_btn_rect.collidepoint(smx, smy):
                     draw_retro_box(screen, restart_btn_rect, (102, 187, 106), (200, 230, 201), (0, 0, 0))
                 else:
                     draw_retro_box(screen, restart_btn_rect, (67, 160, 71), (129, 199, 132), (0, 0, 0))
