@@ -92,6 +92,12 @@ def draw_retro_box(surface, rect, fill_color, border_color, outer_border_color):
     pygame.draw.rect(surface, border_color, rect.inflate(6, 6))
     pygame.draw.rect(surface, fill_color, rect)
 
+# Helper untuk Memastikan Deteksi Klik/Sentuh Akurat di Laptop & HP
+def is_button_clicked(rect, event_pos):
+    mouse_pos = pygame.mouse.get_pos()
+    padded_rect = rect.inflate(10, 10)
+    return padded_rect.collidepoint(mouse_pos) or padded_rect.collidepoint(event_pos)
+
 # 5. FUNGSI UTAMA GAME
 async def main():
     high_score = load_highscore()
@@ -112,13 +118,29 @@ async def main():
     title_hover = 0
     title_hover_dir = 1
 
-    # Area tombol presisi
+    # Area Tombol Presisi
     start_btn_rect = pygame.Rect(SCREEN_WIDTH // 2 - 160, 370, 320, 64)
     restart_btn_rect = pygame.Rect(SCREEN_WIDTH // 2 - 150, 400, 300, 56)
 
     running = True
     while running:
         current_time = pygame.time.get_ticks()
+        mouse_pos = pygame.mouse.get_pos()
+
+        # Ubah Bentuk Kursor Mouse di Laptop saat Hover ke Tombol
+        is_hovering = False
+        if state == 'MENU' and start_btn_rect.collidepoint(mouse_pos):
+            is_hovering = True
+        elif state == 'GAMEOVER' and restart_btn_rect.collidepoint(mouse_pos):
+            is_hovering = True
+
+        try:
+            if is_hovering:
+                pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_HAND)
+            else:
+                pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
+        except Exception:
+            pass
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -142,14 +164,13 @@ async def main():
                         bird_vy = jump_strength
                         play_sound(sound_jump)
 
-            # Kontrol Sentuh / Klik Tombol Presisi
+            # Deteksi Klik Kursor Laptop & Sentuhan HP
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 1:
-                    click_pos = event.pos
+                    click_pos = getattr(event, 'pos', mouse_pos)
 
                     if state == 'MENU':
-                        # Hanya mulai jika menekan tombol START GAME
-                        if start_btn_rect.collidepoint(click_pos):
+                        if is_button_clicked(start_btn_rect, click_pos):
                             state = 'PLAYING'
                             bird_y = SCREEN_HEIGHT // 2
                             bird_vy = jump_strength
@@ -158,8 +179,7 @@ async def main():
                             play_sound(sound_jump)
 
                     elif state == 'GAMEOVER':
-                        # Hanya kembali ke MENU jika menekan tombol MAIN LAGI
-                        if restart_btn_rect.collidepoint(click_pos):
+                        if is_button_clicked(restart_btn_rect, click_pos):
                             state = 'MENU'
 
                     elif state == 'PLAYING':
@@ -218,7 +238,12 @@ async def main():
             bird_menu_y = 260 + title_hover
             screen.blit(bird_img, (SCREEN_WIDTH // 2 - 30, bird_menu_y))
 
-            draw_retro_box(screen, start_btn_rect, (230, 81, 0), (255, 183, 77), (0, 0, 0))
+            # Efek Warna Hover di Laptop
+            if start_btn_rect.collidepoint(mouse_pos):
+                draw_retro_box(screen, start_btn_rect, (255, 112, 67), (255, 224, 130), (0, 0, 0))
+            else:
+                draw_retro_box(screen, start_btn_rect, (230, 81, 0), (255, 183, 77), (0, 0, 0))
+
             draw_pixel_text(screen, "START GAME", font_medium, (255, 255, 255), (0, 0, 0), start_btn_rect.centerx, start_btn_rect.centery)
 
             hs_box = pygame.Rect(SCREEN_WIDTH // 2 - 160, 480, 320, 48)
@@ -253,7 +278,12 @@ async def main():
                 draw_pixel_text(screen, f"SKOR    : {score}", font_medium, (255, 255, 255), (0, 0, 0), SCREEN_WIDTH // 2, 300)
                 draw_pixel_text(screen, f"TERTINGGI: {high_score}", font_medium, (248, 216, 0), (0, 0, 0), SCREEN_WIDTH // 2, 345)
 
-                draw_retro_box(screen, restart_btn_rect, (67, 160, 71), (129, 199, 132), (0, 0, 0))
+                # Efek Warna Hover di Laptop saat Game Over
+                if restart_btn_rect.collidepoint(mouse_pos):
+                    draw_retro_box(screen, restart_btn_rect, (102, 187, 106), (200, 230, 201), (0, 0, 0))
+                else:
+                    draw_retro_box(screen, restart_btn_rect, (67, 160, 71), (129, 199, 132), (0, 0, 0))
+
                 draw_pixel_text(screen, "MAIN LAGI", font_medium, (255, 255, 255), (0, 0, 0), restart_btn_rect.centerx, restart_btn_rect.centery)
 
         pygame.display.update()
