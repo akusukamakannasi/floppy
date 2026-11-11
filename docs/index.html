@@ -23,18 +23,16 @@ from pathlib import Path
 # do not rename
 async def custom_site():
     import embed
-    platform.document.body.style.background = "#0f2027"
+    platform.document.body.style.background = "#0B0F19"
 
     platform.window.transfer.hidden = true
     platform.window.canvas.style.visibility = "visible"
 
     bundle = "tesgame"
 
-    # the C or js loader could do that but be explicit.
-    appdir = Path(f"/data/data/{bundle}") # /data/data/tesgame
+    appdir = Path(f"/data/data/{bundle}")
     appdir.mkdir()
 
-    # unpack filesystem from compressed archive into work dir
     if platform.window.location.host.find('.itch.zone')>0:
         import zipfile
         async with platform.fopen("tesgame.apk", "rb") as archive:
@@ -47,16 +45,13 @@ async def custom_site():
             tar.extractall(path=appdir.as_posix(), filter='tar')
             tar.close()
 
-    # preloader will change to work dir and prepend it to sys.path
     platform.run_main(PyConfig, loaderhome= appdir / "assets", loadermain=None)
 
-    # wait preloading complete : that includes images and wasm compilation of bundled modules
     while embed.counter()<0:
         await asyncio.sleep(.1)
 
     main = appdir / "assets" / "main.py"
 
-    # test/wait user media interaction
     if not platform.window.MM.UME:
         __import__(__name__).__file__ = main
         msg  = "Ready to start ! Please click/touch page"
@@ -66,7 +61,6 @@ async def custom_site():
         while not platform.window.MM.UME:
             await asyncio.sleep(.1)
 
-    # start async top level machinery
     await TopLevel_async_handler.start_toplevel(platform.shell, console=window.python.config.debug)
 
     __import__(__name__).__file__ = main
@@ -124,13 +118,13 @@ function show_infobox() {
 
     <style>
         html, body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             margin: 0;
             padding: 0;
             width: 100%;
             height: 100%;
             overflow: hidden;
-            background-color: #0f2027;
+            background-color: #0B0F19;
         }
 
         #status {
@@ -147,14 +141,14 @@ function show_infobox() {
             width: 300px;
         }
 
-        /* Desain Splash Screen Game Modern menggantikan kotak hijau polos */
+        /* Splash Screen Elegan */
         #infobox {
             position: fixed;
             top: 0;
             left: 0;
             width: 100vw;
             height: 100vh;
-            background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+            background: radial-gradient(circle at center, #1E293B 0%, #0B0F19 100%);
             color: #ffffff;
             display: flex;
             flex-direction: column;
@@ -165,17 +159,18 @@ function show_infobox() {
             text-align: center;
             box-sizing: border-box;
             padding: 20px;
+            user-select: none;
+            -webkit-user-select: none;
         }
 
-        @keyframes bounce {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-15px); }
+        @keyframes floatAnim {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
         }
 
-        @keyframes pulse {
-            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.7); }
-            70% { transform: scale(1.05); box-shadow: 0 0 0 15px rgba(46, 204, 113, 0); }
-            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(46, 204, 113, 0); }
+        @keyframes breathe {
+            0%, 100% { opacity: 0.35; transform: scale(0.98); }
+            50% { opacity: 0.9; transform: scale(1.02); }
         }
 
         /* Canvas Fullscreen Responsif */
@@ -223,10 +218,26 @@ function show_infobox() {
     <canvas class="emscripten" id="canvas3d" width="1280px" height="720px" oncontextmenu="event.preventDefault()" tabindex=1 hidden></canvas>
 
     <div id="infobox">
-        <div style="font-size: 55px; margin-bottom: 10px; animation: bounce 1.5s infinite;">🐤</div>
-        <div style="font-size: 34px; font-weight: 800; color: #f1c40f; text-shadow: 0 4px 15px rgba(0,0,0,0.5); margin-bottom: 25px; letter-spacing: 1px;">FLOPPY BIRD</div>
-        <div style="background: linear-gradient(45deg, #2ecc71, #27ae60); padding: 16px 36px; border-radius: 50px; font-size: 18px; font-weight: bold; color: white; animation: pulse 1.8s infinite;">
-            🎮 SENTUH UNTUK MAIN
+        <div style="display: flex; flex-direction: column; align-items: center;">
+            <svg width="72" height="72" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" style="animation: floatAnim 2.6s ease-in-out infinite; filter: drop-shadow(0 8px 20px rgba(245, 158, 11, 0.35)); margin-bottom: 12px;">
+                <path d="M 20,50 Q 35,25 65,30 Q 80,32 90,45 Q 75,55 60,52 Q 40,72 25,65 Q 15,60 20,50 Z" fill="url(#birdGrad)"/>
+                <circle cx="70" cy="40" r="4.5" fill="#0B0F19"/>
+                <defs>
+                    <linearGradient id="birdGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#FCD34D" />
+                        <stop offset="100%" stop-color="#F59E0B" />
+                    </linearGradient>
+                </defs>
+            </svg>
+            <div style="font-size: 32px; font-weight: 900; letter-spacing: 6px; background: linear-gradient(180deg, #FFFFFF 0%, #94A3B8 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-shadow: 0 4px 20px rgba(0,0,0,0.5);">FLOPPY BIRD</div>
+            
+            <div style="margin-top: 45px; display: flex; flex-direction: column; align-items: center; gap: 10px; animation: breathe 2.2s ease-in-out infinite;">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#64748B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="9"></circle>
+                    <path d="M12 8v8M8 12h8"></path>
+                </svg>
+                <span style="font-size: 12px; font-weight: 600; letter-spacing: 4px; color: #94A3B8; text-transform: uppercase;">Sentuh Di Mana Saja Untuk Memulai</span>
+            </div>
         </div>
     </div>
 
@@ -301,22 +312,42 @@ function show_infobox() {
         document.getElementById("info").innerHTML = data
     }
 
-    // Mengubah teks mentah pygbag menjadi tampilan splash screen interaktif saat file selesai di-load
+    // Mengganti teks infobox Pygbag secara dinamis dengan tampilan SVG minimalis
     const infobox = document.getElementById("infobox");
+    const renderOverlay = () => {
+        infobox.innerHTML = `
+            <div style="display: flex; flex-direction: column; align-items: center;">
+                <svg width="72" height="72" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" style="animation: floatAnim 2.6s ease-in-out infinite; filter: drop-shadow(0 8px 20px rgba(245, 158, 11, 0.35)); margin-bottom: 12px;">
+                    <path d="M 20,50 Q 35,25 65,30 Q 80,32 90,45 Q 75,55 60,52 Q 40,72 25,65 Q 15,60 20,50 Z" fill="url(#birdGrad)"/>
+                    <circle cx="70" cy="40" r="4.5" fill="#0B0F19"/>
+                    <defs>
+                        <linearGradient id="birdGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#FCD34D" />
+                            <stop offset="100%" stop-color="#F59E0B" />
+                        </linearGradient>
+                    </defs>
+                </svg>
+                <div style="font-size: 32px; font-weight: 900; letter-spacing: 6px; background: linear-gradient(180deg, #FFFFFF 0%, #94A3B8 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-shadow: 0 4px 20px rgba(0,0,0,0.5);">FLOPPY BIRD</div>
+                
+                <div style="margin-top: 45px; display: flex; flex-direction: column; align-items: center; gap: 10px; animation: breathe 2.2s ease-in-out infinite;">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#64748B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="9"></circle>
+                        <path d="M12 8v8M8 12h8"></path>
+                    </svg>
+                    <span style="font-size: 12px; font-weight: 600; letter-spacing: 4px; color: #94A3B8; text-transform: uppercase;">Sentuh Di Mana Saja Untuk Memulai</span>
+                </div>
+            </div>
+        `;
+    };
+
     const observer = new MutationObserver(() => {
         if (infobox.innerText.includes("Ready to start")) {
-            infobox.innerHTML = `
-                <div style="font-size: 55px; margin-bottom: 10px; animation: bounce 1.5s infinite;">🐤</div>
-                <div style="font-size: 34px; font-weight: 800; color: #f1c40f; text-shadow: 0 4px 15px rgba(0,0,0,0.5); margin-bottom: 25px; letter-spacing: 1px;">FLOPPY BIRD</div>
-                <div style="background: linear-gradient(45deg, #2ecc71, #27ae60); padding: 16px 36px; border-radius: 50px; font-size: 18px; font-weight: bold; color: white; animation: pulse 1.8s infinite;">
-                    🎮 SENTUH UNTUK MAIN
-                </div>
-            `;
+            renderOverlay();
         }
     });
     observer.observe(infobox, { childList: true, characterData: true, subtree: true });
 
-    // Auto-Fullscreen & Auto-Rotate saat tombol disapu/ditekan
+    // Auto-Fullscreen & Landscape Lock saat layar disentuh
     function requestGameFullscreen() {
         let elem = document.documentElement;
         if (!document.fullscreenElement) {
