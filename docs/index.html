@@ -23,7 +23,7 @@ from pathlib import Path
 # do not rename
 async def custom_site():
     import embed
-    platform.document.body.style.background = "#000000"
+    platform.document.body.style.background = "#0f2027"
 
     platform.window.transfer.hidden = true
     platform.window.canvas.style.visibility = "visible"
@@ -109,13 +109,7 @@ config = {
 }
 
 function show_infobox() {
-    infobox.style.display = "block";
-    const w = infobox.offsetWidth;
-    const h = infobox.offsetHeight;
-    const left = (window.innerWidth - w) / 2;
-    const top = (window.innerHeight - h) / 2;
-    infobox.style.left = left + "px";
-    infobox.style.top = top + "px";
+    infobox.style.display = "flex";
 }
 </script>
 
@@ -130,13 +124,13 @@ function show_infobox() {
 
     <style>
         html, body {
-            font-family: arial;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
             padding: 0;
             width: 100%;
             height: 100%;
             overflow: hidden;
-            background-color: #000000;
+            background-color: #0f2027;
         }
 
         #status {
@@ -153,16 +147,35 @@ function show_infobox() {
             width: 300px;
         }
 
+        /* Desain Splash Screen Game Modern menggantikan kotak hijau polos */
         #infobox {
             position: fixed;
-            background: #27ae60;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
             color: #ffffff;
-            font-weight: bold;
-            padding: 14px 28px;
-            border-radius: 30px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
             z-index: 999999;
             cursor: pointer;
+            text-align: center;
+            box-sizing: border-box;
+            padding: 20px;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-15px); }
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.7); }
+            70% { transform: scale(1.05); box-shadow: 0 0 0 15px rgba(46, 204, 113, 0); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(46, 204, 113, 0); }
         }
 
         /* Canvas Fullscreen Responsif */
@@ -209,7 +222,13 @@ function show_infobox() {
     <canvas class="emscripten" id="canvas" width="1px" height="1px" oncontextmenu="event.preventDefault()" tabindex=1></canvas>
     <canvas class="emscripten" id="canvas3d" width="1280px" height="720px" oncontextmenu="event.preventDefault()" tabindex=1 hidden></canvas>
 
-    <div id="infobox">Loading, please wait ...</div>
+    <div id="infobox">
+        <div style="font-size: 55px; margin-bottom: 10px; animation: bounce 1.5s infinite;">🐤</div>
+        <div style="font-size: 34px; font-weight: 800; color: #f1c40f; text-shadow: 0 4px 15px rgba(0,0,0,0.5); margin-bottom: 25px; letter-spacing: 1px;">FLOPPY BIRD</div>
+        <div style="background: linear-gradient(45deg, #2ecc71, #27ae60); padding: 16px 36px; border-radius: 50px; font-size: 18px; font-weight: bold; color: white; animation: pulse 1.8s infinite;">
+            🎮 SENTUH UNTUK MAIN
+        </div>
+    </div>
 
     <div id=html></div>
 
@@ -282,7 +301,22 @@ function show_infobox() {
         document.getElementById("info").innerHTML = data
     }
 
-    // Auto-Fullscreen saat pertama kali layar diklik/disentuh
+    // Mengubah teks mentah pygbag menjadi tampilan splash screen interaktif saat file selesai di-load
+    const infobox = document.getElementById("infobox");
+    const observer = new MutationObserver(() => {
+        if (infobox.innerText.includes("Ready to start")) {
+            infobox.innerHTML = `
+                <div style="font-size: 55px; margin-bottom: 10px; animation: bounce 1.5s infinite;">🐤</div>
+                <div style="font-size: 34px; font-weight: 800; color: #f1c40f; text-shadow: 0 4px 15px rgba(0,0,0,0.5); margin-bottom: 25px; letter-spacing: 1px;">FLOPPY BIRD</div>
+                <div style="background: linear-gradient(45deg, #2ecc71, #27ae60); padding: 16px 36px; border-radius: 50px; font-size: 18px; font-weight: bold; color: white; animation: pulse 1.8s infinite;">
+                    🎮 SENTUH UNTUK MAIN
+                </div>
+            `;
+        }
+    });
+    observer.observe(infobox, { childList: true, characterData: true, subtree: true });
+
+    // Auto-Fullscreen & Auto-Rotate saat tombol disapu/ditekan
     function requestGameFullscreen() {
         let elem = document.documentElement;
         if (!document.fullscreenElement) {
