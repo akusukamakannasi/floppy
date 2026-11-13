@@ -77,7 +77,7 @@ def save_highscore(score):
     except Exception:
         pass
 
-# 4. Helper Render Teks & Panel Retro 8-Bit
+# 4. Helper Render Teks & Panel
 def draw_pixel_text(surface, text, font, color, shadow_color, center_x, center_y):
     shadow_surf = font.render(text, False, shadow_color)
     shadow_rect = shadow_surf.get_rect(center=(center_x + 4, center_y + 4))
@@ -112,7 +112,7 @@ async def main():
     title_hover = 0
     title_hover_dir = 1
 
-    # Definisi Area Tombol (dengan margin hit-box toleransi 20px)
+    # Definisi Area Tombol
     start_btn_rect = pygame.Rect(SCREEN_WIDTH // 2 - 160, 370, 320, 64)
     restart_btn_rect = pygame.Rect(SCREEN_WIDTH // 2 - 150, 400, 300, 56)
 
@@ -125,10 +125,10 @@ async def main():
             if event.type == pygame.QUIT:
                 running = False
             
+            # KONTROL KEYBOARD (SPASI)
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     running = False
-                
                 if event.key == pygame.K_SPACE:
                     if state == 'MENU':
                         state = 'PLAYING'
@@ -143,29 +143,36 @@ async def main():
                         bird_vy = jump_strength
                         play_sound(sound_jump)
 
-            # Deteksi Klik Kursor Laptop & Sentuhan HP
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                if event.button == 1:
-                    click_pos = event.pos
+            # KONTROL KLIK (MOUSE / TRACKPAD / TOUCH)
+            if event.type in [pygame.MOUSEBUTTONDOWN, pygame.FINGERDOWN]:
+                # Deteksi posisi klik se-akurat mungkin, apa pun jenis device-nya
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    cx, cy = pygame.mouse.get_pos()
+                else: # FINGERDOWN (layar sentuh)
+                    cx, cy = event.x * SCREEN_WIDTH, event.y * SCREEN_HEIGHT
+                
+                # Perbesar area deteksi klik 40px agar gampang ditekan
+                hit_start = start_btn_rect.inflate(40, 40)
+                hit_restart = restart_btn_rect.inflate(40, 40)
 
-                    if state == 'MENU':
-                        # Mengecek event.pos dan mouse_pos dengan toleransi hit-box
-                        if start_btn_rect.inflate(20, 20).collidepoint(click_pos) or start_btn_rect.inflate(20, 20).collidepoint(mouse_pos):
-                            state = 'PLAYING'
-                            bird_y = SCREEN_HEIGHT // 2
-                            bird_vy = jump_strength
-                            pipes.clear()
-                            score = 0
-                            play_sound(sound_jump)
-
-                    elif state == 'GAMEOVER':
-                        if restart_btn_rect.inflate(20, 20).collidepoint(click_pos) or restart_btn_rect.inflate(20, 20).collidepoint(mouse_pos):
-                            state = 'MENU'
-
-                    elif state == 'PLAYING':
+                if state == 'MENU':
+                    if hit_start.collidepoint(cx, cy):
+                        state = 'PLAYING'
+                        bird_y = SCREEN_HEIGHT // 2
                         bird_vy = jump_strength
+                        pipes.clear()
+                        score = 0
                         play_sound(sound_jump)
 
+                elif state == 'GAMEOVER':
+                    if hit_restart.collidepoint(cx, cy):
+                        state = 'MENU'
+
+                elif state == 'PLAYING':
+                    bird_vy = jump_strength
+                    play_sound(sound_jump)
+
+        # UPDATE LOGIKA GAME
         if state == 'MENU':
             title_hover += 0.4 * title_hover_dir
             if abs(title_hover) > 12:
@@ -210,16 +217,17 @@ async def main():
                     play_sound(sound_hit)
                     state = 'GAMEOVER'
 
+        # RENDER GAMBAR
         screen.blit(bg_img, (0, 0))
 
         if state == 'MENU':
             draw_pixel_text(screen, "FLOPPY BIRD", font_title, (248, 216, 0), (0, 0, 0), SCREEN_WIDTH // 2, 170)
-
+            
             bird_menu_y = 260 + title_hover
             screen.blit(bird_img, (SCREEN_WIDTH // 2 - 30, bird_menu_y))
 
-            # Visual Efek Hover Tombol Saat Kursor Laptop Mengarah ke Tombol
-            if start_btn_rect.collidepoint(mouse_pos):
+            # Hover Efek Visual di Laptop
+            if start_btn_rect.inflate(40, 40).collidepoint(mouse_pos):
                 draw_retro_box(screen, start_btn_rect, (255, 112, 67), (255, 224, 130), (0, 0, 0))
             else:
                 draw_retro_box(screen, start_btn_rect, (230, 81, 0), (255, 183, 77), (0, 0, 0))
@@ -258,7 +266,7 @@ async def main():
                 draw_pixel_text(screen, f"SKOR    : {score}", font_medium, (255, 255, 255), (0, 0, 0), SCREEN_WIDTH // 2, 300)
                 draw_pixel_text(screen, f"TERTINGGI: {high_score}", font_medium, (248, 216, 0), (0, 0, 0), SCREEN_WIDTH // 2, 345)
 
-                if restart_btn_rect.collidepoint(mouse_pos):
+                if restart_btn_rect.inflate(40, 40).collidepoint(mouse_pos):
                     draw_retro_box(screen, restart_btn_rect, (102, 187, 106), (200, 230, 201), (0, 0, 0))
                 else:
                     draw_retro_box(screen, restart_btn_rect, (67, 160, 71), (129, 199, 132), (0, 0, 0))
